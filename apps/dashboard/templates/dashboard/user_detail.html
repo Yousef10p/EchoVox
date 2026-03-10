@@ -1,0 +1,130 @@
+{% extends 'dashboard/base_admin.html' %}
+{% block title %}@{{ u.username }}{% endblock %}
+{% block page_title %}User — @{{ u.username }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:20px;">
+  <a href="{% url 'admin_users' %}" class="btn btn-ghost btn-sm">← Back to Users</a>
+</div>
+
+<!-- PROFILE HEADER -->
+<div class="table-card" style="margin-bottom:24px;">
+  <div style="padding:28px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:20px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--teal));display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:#fff;font-family:'Syne',sans-serif;">
+        {{ u.username|first|upper }}
+      </div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--ink);">{{ u.get_full_name|default:u.username }}</div>
+        <div style="color:var(--text-faint);font-size:0.88rem;">@{{ u.username }} · {{ u.email }}</div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          {% if u.is_superuser %}<span class="badge badge-orange">Superuser</span>{% elif u.is_staff %}<span class="badge badge-teal">Staff</span>{% else %}<span class="badge badge-gray">User</span>{% endif %}
+          {% if u.is_active %}<span class="badge badge-green">Active</span>{% else %}<span class="badge badge-red">Banned</span>{% endif %}
+          {% if u == request.user %}<span class="badge badge-ink">You</span>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% if u != request.user %}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <!-- Toggle ban -->
+      <button class="btn {% if u.is_active %}btn-red{% else %}btn-teal{% endif %}"
+        onclick="confirmAction('ban','{% url 'admin_user_ban' u.pk %}',
+          '{% if u.is_active %}Ban{% else %}Unban{% endif %} @{{ u.username }}?',
+          '{% if u.is_active %}This user will be unable to log in.{% else %}This user will be able to log in again.{% endif %}',
+          '{% if u.is_active %}Ban User{% else %}Unban User{% endif %}',
+          '{% if u.is_active %}btn-red{% else %}btn-teal{% endif %}',
+          '{% url 'admin_user_detail' u.pk %}')">
+        {% if u.is_active %}🚫 Ban{% else %}✓ Unban{% endif %}
+      </button>
+      <!-- Toggle staff -->
+      {% if not u.is_superuser %}
+      <button class="btn {% if u.is_staff %}btn-gold{% else %}btn-teal{% endif %}"
+        onclick="confirmAction('staff','{% url 'admin_user_staff' u.pk %}',
+          '{% if u.is_staff %}Remove staff from{% else %}Make staff{% endif %} @{{ u.username }}?',
+          '{% if u.is_staff %}This user will lose admin panel access.{% else %}This user will gain admin panel access.{% endif %}',
+          '{% if u.is_staff %}Remove Staff{% else %}Grant Staff{% endif %}',
+          '{% if u.is_staff %}btn-gold{% else %}btn-teal{% endif %}',
+          '{% url 'admin_user_detail' u.pk %}')">
+        {% if u.is_staff %}★ Remove Staff{% else %}★ Make Staff{% endif %}
+      </button>
+      {% endif %}
+      <!-- Delete -->
+      <button class="btn btn-red" onclick="confirmAction('delete','{% url 'admin_user_delete' u.pk %}','Delete @{{ u.username }} forever?','This permanently deletes the user and ALL their posts, replies and jobs. Cannot be undone.','Delete Forever','btn-red','{% url 'admin_users' %}')">
+        🗑 Delete Account
+      </button>
+    </div>
+    {% endif %}
+  </div>
+  <div style="padding:0 28px 20px;display:flex;gap:32px;border-top:1px solid var(--surface-2);padding-top:16px;">
+    <div><div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;">{{ posts.count }}</div><div style="font-size:0.8rem;color:var(--text-faint);">Posts</div></div>
+    <div><div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;">{{ replies.count }}</div><div style="font-size:0.8rem;color:var(--text-faint);">Replies</div></div>
+    <div><div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;">{{ jobs.count }}</div><div style="font-size:0.8rem;color:var(--text-faint);">AI Jobs</div></div>
+    <div><div style="font-size:0.88rem;font-weight:600;margin-top:4px;">{{ u.date_joined|date:"M d, Y" }}</div><div style="font-size:0.8rem;color:var(--text-faint);">Joined</div></div>
+    <div><div style="font-size:0.88rem;font-weight:600;margin-top:4px;">{{ u.last_login|date:"M d, Y"|default:"Never" }}</div><div style="font-size:0.8rem;color:var(--text-faint);">Last login</div></div>
+  </div>
+</div>
+
+<!-- POSTS -->
+<div class="table-card" style="margin-bottom:24px;">
+  <div class="table-header"><div class="table-title">📋 Posts ({{ posts.count }})</div></div>
+  <table>
+    <thead><tr><th>Title</th><th>Languages</th><th>Status</th><th>Replies</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      {% for post in posts %}
+      <tr>
+        <td class="truncate">{{ post.title }}</td>
+        <td style="color:var(--text-faint);">{{ post.source_lang_name }} → {{ post.target_lang_name }}</td>
+        <td>{% if post.status == 'open' %}<span class="badge badge-green">Open</span>{% elif post.status == 'in_progress' %}<span class="badge badge-gold">In Progress</span>{% else %}<span class="badge badge-gray">Completed</span>{% endif %}</td>
+        <td>{{ post.reply_count }}</td>
+        <td style="color:var(--text-faint);">{{ post.created_at|date:"M d, Y" }}</td>
+        <td>
+          <button class="btn btn-red btn-sm" onclick="confirmAction('del','{% url 'admin_post_delete' post.pk %}','Delete this post?','All replies will also be deleted.','Delete','btn-red','{% url 'admin_user_detail' u.pk %}')">Delete</button>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="6"><div class="empty">No posts.</div></td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- REPLIES -->
+<div class="table-card" style="margin-bottom:24px;">
+  <div class="table-header"><div class="table-title">💬 Replies ({{ replies.count }})</div></div>
+  <table>
+    <thead><tr><th>On post</th><th>Message</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      {% for reply in replies %}
+      <tr>
+        <td class="truncate" style="max-width:180px;">{{ reply.post.title }}</td>
+        <td class="truncate">{{ reply.body }}</td>
+        <td style="color:var(--text-faint);">{{ reply.created_at|date:"M d" }}</td>
+        <td>
+          <button class="btn btn-red btn-sm" onclick="confirmAction('del','{% url 'admin_reply_delete' reply.pk %}','Delete this reply?','This action cannot be undone.','Delete','btn-red','{% url 'admin_user_detail' u.pk %}')">Delete</button>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="4"><div class="empty">No replies.</div></td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- JOBS -->
+<div class="table-card">
+  <div class="table-header"><div class="table-title">⚡ Recent AI Jobs</div></div>
+  <table>
+    <thead><tr><th>Type</th><th>Languages</th><th>Preview</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr>
+        <td><span class="badge badge-ink">{{ job.get_job_type_display }}</span></td>
+        <td style="color:var(--text-faint);">{{ job.source_lang_name }} → {{ job.target_lang_name }}</td>
+        <td class="truncate" style="color:var(--text-mute);">{{ job.preview }}</td>
+        <td style="color:var(--text-faint);">{{ job.created_at|date:"M d, H:i" }}</td>
+        <td>
+          <button class="btn btn-red btn-sm" onclick="confirmAction('del','{% url 'admin_job_delete' job.pk %}','Delete this job?','This action cannot be undone.','Delete','btn-red','{% url 'admin_user_detail' u.pk %}')">Delete</button>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="5"><div class="empty">No jobs.</div></td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}Echovox — AI Translation Platform{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── HERO ── */
+  .hero {
+    min-height: calc(100vh - 68px);
+    display: flex; align-items: center;
+    position: relative; overflow: hidden;
+    padding: 80px 0;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 70% at 70% 50%, rgba(255,107,53,0.1) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 15% 80%, rgba(0,201,167,0.08) 0%, transparent 60%);
+  }
+  .hero-inner { position: relative; z-index: 1; max-width: 720px; }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-pale); color: var(--accent);
+    padding: 6px 14px; border-radius: 100px;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em;
+    margin-bottom: 28px; border: 1px solid rgba(255,107,53,0.2);
+  }
+  .hero-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+  .hero h1 {
+    font-size: clamp(3rem, 3vw, 3rem); font-weight: 800;
+    color: var(--ink); line-height: 1.05; margin-bottom: 24px;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero-desc {
+    font-size: 1.15rem; color: var(--text-mute);
+    line-height: 1.75; margin-bottom: 44px; max-width: 540px;
+  }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 56px; }
+  .hero-actions .btn { padding: 14px 30px; font-size: 1rem; border-radius: 12px; }
+  .hero-pills {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .pill {
+    padding: 6px 14px; background: var(--surface-2);
+    border-radius: 100px; font-size: 0.82rem; font-weight: 500;
+    color: var(--text-mute); border: 1px solid var(--surface-3);
+  }
+
+  /* ── FEATURES STRIP ── */
+  .features-strip {
+    background: var(--ink); padding: 64px 0;
+  }
+  .strip-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 2px; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 20px; overflow: hidden;
+  }
+  .strip-item {
+    padding: 32px 28px;
+    background: rgba(255,255,255,0.02);
+    transition: var(--transition);
+  }
+  .strip-item:hover { background: rgba(255,107,53,0.08); }
+  .strip-icon { font-size: 1.8rem; margin-bottom: 14px; }
+  .strip-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .strip-desc { font-size: 0.86rem; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+  /* ── COMMUNITY SECTION ── */
+  .community-section { padding: 80px 0; }
+  .sec-eyebrow { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .sec-eyebrow::before { content: ''; width: 20px; height: 2px; background: var(--accent); border-radius: 1px; }
+  .sec-title { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; color: var(--ink); margin-bottom: 14px; }
+  .sec-sub { font-size: 1rem; color: var(--text-mute); max-width: 500px; line-height: 1.7; margin-bottom: 36px; }
+
+  .posts-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .post-mini { background: #fff; border-radius: 14px; border: 1px solid var(--surface-3); overflow: hidden; text-decoration: none; color: inherit; transition: var(--transition); display: block; }
+  .post-mini:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+  .pm-top { height: 3px; background: linear-gradient(90deg, var(--accent), var(--teal)); }
+  .pm-body { padding: 18px 20px; }
+  .pm-title { font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--ink); margin-bottom: 10px; line-height: 1.35; }
+  .pm-pair { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; color: var(--text-mute); margin-bottom: 10px; }
+  .pm-arrow { color: var(--accent); }
+  .pm-foot { padding: 10px 20px; border-top: 1px solid var(--surface-2); background: var(--surface); display: flex; align-items: center; gap: 8px; font-size: 0.76rem; color: var(--text-faint); }
+  .pm-av { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--teal)); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 800; color: #fff; }
+
+  /* ── FOOTER ── */
+  footer { background: var(--ink); color: var(--surface); padding: 48px 0 28px; margin-top: 0; }
+  .footer-grid { max-width: 1280px; margin: 0 auto; padding: 0 32px; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 48px; }
+  .footer-brand { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; }
+  .footer-brand span { color: var(--accent); }
+  .footer-tagline { color: rgba(255,255,255,0.35); font-size: 0.86rem; margin-top: 8px; line-height: 1.6; max-width: 220px; }
+  .footer-head { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.3); margin-bottom: 16px; }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-links a { color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.88rem; transition: var(--transition); }
+  .footer-links a:hover { color: #fff; }
+  .footer-bottom { max-width: 1280px; margin: 32px auto 0; padding: 20px 32px 0; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .footer-copy { font-size: 0.82rem; color: rgba(255,255,255,0.25); }
+  .footer-made { font-size: 0.82rem; color: rgba(255,255,255,0.35); display: flex; align-items: center; gap: 8px; }
+  .footer-made a { color: rgba(255,255,255,0.55); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: var(--transition); }
+  .footer-made a:hover { color: #fff; }
+  .li-icon { width: 18px; height: 18px; background: #0a66c2; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 800; color: #fff; font-family: sans-serif; }
+
+  @media (max-width: 900px) {
+    .strip-grid { grid-template-columns: 1fr 1fr; }
+    .posts-row  { grid-template-columns: 1fr 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+  }
+  @media (max-width: 600px) {
+    .strip-grid { grid-template-columns: 1fr; }
+    .posts-row  { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2.6rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-tag">
+        <div class="hero-dot"></div>
+        AI-Powered Translation
+      </div>
+      <h1>Translate anything.<br/><em>Instantly.</em></h1>
+      <p class="hero-desc">
+        Paste text, upload a file, or drop a video — Echovox translates it into 17+ languages in seconds. Or post to the community for human help.
+      </p>
+      <div class="hero-actions">
+        <a href="{% url 'translate_home' %}" class="btn btn-accent">⚡ Start Translating</a>
+        <a href="{% url 'translators_browse' %}" class="btn btn-ghost">Browse Community</a>
+      </div>
+      <div class="hero-pills">
+        <span class="pill">✎ Text</span>
+        <span class="pill">📄 Files</span>
+        <span class="pill">🎬 Video</span>
+        <span class="pill">🔊 Text-to-Speech</span>
+        <span class="pill">👥 Community</span>
+        <span class="pill">📚 History</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES STRIP -->
+<section class="features-strip">
+  <div class="container">
+    <div class="strip-grid">
+      <div class="strip-item">
+        <div class="strip-icon">⚡</div>
+        <div class="strip-title">Instant AI Translation</div>
+        <p class="strip-desc">Translate text and documents in seconds with state-of-the-art AI.</p>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">🎬</div>
+        <div class="strip-title">Video Transcription</div>
+        <p class="strip-desc">Upload a video or paste a URL — we extract the script and translate it.</p>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">🔊</div>
+        <div class="strip-title">Text-to-Speech</div>
+        <p class="strip-desc">Hear your translation read aloud in the target language, right in the browser.</p>
+      </div>
+      <div class="strip-item">
+        <div class="strip-icon">👥</div>
+        <div class="strip-title">Community Board</div>
+        <p class="strip-desc">Post a request and get help from the Echovox community.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY POSTS PREVIEW -->
+{% comment %} {% if recent_posts %}
+<section class="community-section">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px;">
+      <div>
+        <div class="sec-eyebrow">Community</div>
+        <h2 class="sec-title" style="margin-bottom:6px;">Open Requests</h2>
+        <p class="sec-sub" style="margin-bottom:0;">Help others or post your own translation request.</p>
+      </div>
+      <a href="{% url 'translators_browse' %}" class="btn btn-ghost">View all →</a>
+    </div>
+    <div class="posts-row">
+      {% for post in recent_posts %}
+      <a href="{% url 'post_detail' post.pk %}" class="post-mini">
+        <div class="pm-top"></div>
+        <div class="pm-body">
+          <div class="pm-title">{{ post.title|truncatechars:55 }}</div>
+          <div class="pm-pair">
+            <span>{{ post.source_lang_name }}</span>
+            <span class="pm-arrow">→</span>
+            <span>{{ post.target_lang_name }}</span>
+          </div>
+          <span class="chip chip-accent">{{ post.get_category_display }}</span>
+        </div>
+        <div class="pm-foot">
+          <div class="pm-av">{{ post.user.username|first|upper }}</div>
+          <span>{{ post.user.username }}</span>
+          <span style="margin-left:auto;">💬 {{ post.reply_count }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% else %}
+<section class="community-section">
+  <div class="container" style="text-align:center;padding:40px 0;">
+    <div class="sec-eyebrow" style="justify-content:center;">Community</div>
+    <h2 class="sec-title">Be the first to post</h2>
+    <p class="sec-sub" style="margin:0 auto 32px;">Share a translation request with the Echovox community.</p>
+    {% if user.is_authenticated %}
+      <a href="{% url 'create_post' %}" class="btn btn-accent" style="padding:14px 32px;">Post a Request</a>
+    {% else %}
+      <a href="{% url 'register' %}" class="btn btn-accent" style="padding:14px 32px;">Join Echovox</a>
+    {% endif %}
+  </div>
+</section>
+{% endif %} {% endcomment %}
+
+{% endblock %}
+
+{% block extra_foot %}{% endblock %}

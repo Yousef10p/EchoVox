@@ -1,0 +1,115 @@
+{% extends 'dashboard/base_admin.html' %}
+{% block title %}Overview{% endblock %}
+{% block page_title %}Overview{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Welcome back, {{ request.user.first_name|default:request.user.username }} 👋</h1>
+  <p>Here's what's happening on Echovox right now.</p>
+</div>
+
+<!-- STATS -->
+<div class="stat-grid">
+  <div class="stat-card stat-accent">
+    <div class="stat-num">{{ stats.total_users }}</div>
+    <div class="stat-label">Total Users</div>
+    <div class="stat-sub stat-up">↑ {{ stats.new_users_week }} joined this week</div>
+  </div>
+  <div class="stat-card stat-teal">
+    <div class="stat-num">{{ stats.total_posts }}</div>
+    <div class="stat-label">Community Posts</div>
+    <div class="stat-sub">{{ stats.open_posts }} open requests</div>
+  </div>
+  <div class="stat-card stat-gold">
+    <div class="stat-num">{{ stats.total_replies }}</div>
+    <div class="stat-label">Total Replies</div>
+  </div>
+  <div class="stat-card stat-ink">
+    <div class="stat-num">{{ stats.total_jobs }}</div>
+    <div class="stat-label">AI Translations</div>
+    <div class="stat-sub stat-up">↑ {{ stats.jobs_week }} this week</div>
+  </div>
+</div>
+
+<div class="section-grid">
+
+  <!-- RECENT USERS -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-title">👥 Recent Users</div>
+      <a href="{% url 'admin_users' %}" class="btn btn-ghost btn-sm">View all →</a>
+    </div>
+    <table>
+      <thead><tr><th>User</th><th>Joined</th><th>Role</th></tr></thead>
+      <tbody>
+        {% for u in recent_users %}
+        <tr>
+          <td>
+            <div class="td-user">
+              <div class="av av-accent">{{ u.username|first|upper }}</div>
+              <div>
+                <div style="font-weight:600;">{{ u.username }}</div>
+                <div style="font-size:0.78rem;color:var(--text-faint);">{{ u.email|truncatechars:28 }}</div>
+              </div>
+            </div>
+          </td>
+          <td style="color:var(--text-faint);">{{ u.date_joined|date:"M d" }}</td>
+          <td>
+            {% if u.is_superuser %}<span class="badge badge-orange">Superuser</span>
+            {% elif u.is_staff %}<span class="badge badge-teal">Staff</span>
+            {% else %}<span class="badge badge-gray">User</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RECENT POSTS -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-title">📋 Recent Posts</div>
+      <a href="{% url 'admin_posts' %}" class="btn btn-ghost btn-sm">View all →</a>
+    </div>
+    <table>
+      <thead><tr><th>Title</th><th>By</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for post in recent_posts %}
+        <tr>
+          <td><span class="truncate" style="display:block;">{{ post.title }}</span></td>
+          <td style="color:var(--text-faint);">{{ post.user.username }}</td>
+          <td>
+            {% if post.status == 'open' %}<span class="badge badge-green">Open</span>
+            {% elif post.status == 'in_progress' %}<span class="badge badge-gold">In Progress</span>
+            {% else %}<span class="badge badge-gray">Completed</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RECENT AI JOBS -->
+  <div class="table-card" style="grid-column:1/-1;">
+    <div class="table-header">
+      <div class="table-title">⚡ Recent AI Translations</div>
+      <a href="{% url 'admin_jobs' %}" class="btn btn-ghost btn-sm">View all →</a>
+    </div>
+    <table>
+      <thead><tr><th>User</th><th>Type</th><th>Languages</th><th>Preview</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for job in recent_jobs %}
+        <tr>
+          <td>{{ job.user.username|default:"Anonymous" }}</td>
+          <td><span class="badge badge-ink">{{ job.get_job_type_display }}</span></td>
+          <td style="color:var(--text-faint);">{{ job.source_lang_name }} → {{ job.target_lang_name }}</td>
+          <td><span class="truncate" style="display:block;color:var(--text-mute);">{{ job.preview }}</span></td>
+          <td style="color:var(--text-faint);">{{ job.created_at|date:"M d, H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

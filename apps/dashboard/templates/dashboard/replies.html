@@ -1,0 +1,53 @@
+{% extends 'dashboard/base_admin.html' %}
+{% block title %}Replies{% endblock %}
+{% block page_title %}Replies{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Replies</h1>
+  <p>All community post replies.</p>
+</div>
+
+<form method="get" class="filter-bar">
+  <input type="text" name="q" placeholder="🔍  Search replies…" class="filter-input" value="{{ q }}"/>
+  <button type="submit" class="btn btn-accent btn-sm">Search</button>
+  {% if q %}<a href="{% url 'admin_replies' %}" class="btn btn-ghost btn-sm">Clear</a>{% endif %}
+</form>
+
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title">{{ replies.count }} repl{{ replies.count|pluralize:"y,ies" }}</div>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Author</th><th>On Post</th><th>Message</th><th>Has Translation</th><th>Accepted</th><th>Date</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for reply in replies %}
+      <tr>
+        <td>
+          <a href="{% url 'admin_user_detail' reply.user.pk %}" style="color:var(--ink);font-weight:600;text-decoration:none;">@{{ reply.user.username }}</a>
+        </td>
+        <td>
+          <a href="{% url 'post_detail' reply.post.pk %}" target="_blank" style="color:var(--text-mute);text-decoration:none;" class="truncate" style="max-width:160px;">
+            {{ reply.post.title|truncatechars:40 }}
+          </a>
+        </td>
+        <td class="truncate" style="color:var(--text-mute);max-width:200px;">{{ reply.body|truncatechars:80 }}</td>
+        <td>{% if reply.translation %}<span class="badge badge-teal">Yes</span>{% else %}<span class="badge badge-gray">No</span>{% endif %}</td>
+        <td>{% if reply.is_accepted %}<span class="badge badge-green">✓ Accepted</span>{% else %}—{% endif %}</td>
+        <td style="color:var(--text-faint);font-size:0.82rem;">{{ reply.created_at|date:"M d, Y" }}</td>
+        <td>
+          <button class="btn btn-red btn-sm"
+            onclick="confirmAction('del','{% url 'admin_reply_delete' reply.pk %}','Delete this reply?','This action cannot be undone.','Delete','btn-red')">
+            Delete
+          </button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7"><div class="empty"><div class="empty-icon">💬</div>No replies found.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

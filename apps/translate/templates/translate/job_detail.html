@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Translation #{{ job.pk }} — Echovox{% endblock %}
+
+{% block extra_head %}
+<style>
+  .detail-hero { background:var(--ink); padding:48px 0; position:relative; overflow:hidden; }
+  .detail-hero h1 { color:#fff; font-size:1.8rem; margin-bottom:8px; position:relative; z-index:1; }
+  .detail-hero p { color:rgba(255,255,255,0.5); position:relative; z-index:1; }
+  .detail-content { padding:48px 0 80px; }
+  .detail-grid { display:grid; grid-template-columns:1fr auto; gap:32px; margin-bottom:28px; align-items:start; }
+  .meta-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+
+  .result-columns { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:28px; }
+  .rc-label { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
+  .rc-label.src { color:var(--text-faint); }
+  .rc-label.tgt { color:#00856e; }
+  .rc-text { padding:24px; border-radius:14px; font-size:0.95rem; line-height:1.8; white-space:pre-wrap; word-break:break-word; min-height:200px; }
+  .rc-text.orig  { background:var(--surface); border:1px solid var(--surface-3); }
+  .rc-text.trans { background:var(--teal-pale); border:1px solid rgba(0,201,167,0.25); }
+  .rc-text.scrpt { background:#f0f0ff; border:1px solid rgba(100,100,255,0.15); }
+
+  .transcript-section { margin-bottom:24px; padding:24px; background:#f0f0ff; border-radius:14px; border:1px solid rgba(100,100,255,0.15); }
+  .ts-label { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#6666cc; margin-bottom:12px; }
+
+  .copy-btn { padding:8px 18px; border-radius:8px; border:1.5px solid var(--surface-3); background:#fff; color:var(--text-mute); cursor:pointer; font-size:0.85rem; font-family:'DM Sans',sans-serif; font-weight:600; transition:var(--transition); }
+  .copy-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .copy-btn.copied { border-color:var(--teal); color:var(--teal); background:var(--teal-pale); }
+  .dl-dropdown { position:relative; display:inline-block; }
+  .dl-menu { display:none; position:absolute; right:0; top:calc(100% + 8px); background:#fff; border:1px solid var(--surface-3); border-radius:12px; box-shadow:0 16px 48px rgba(10,10,15,0.14); min-width:260px; z-index:200; overflow:hidden; }
+  .dl-menu.open { display:block; }
+  .dl-item { display:block; width:100%; padding:12px 18px; background:none; border:none; text-align:left; font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:500; color:var(--ink); cursor:pointer; transition:0.2s; border-bottom:1px solid var(--surface-2); }
+  .dl-item:last-child { border-bottom:none; }
+  .dl-item:hover { background:var(--accent-pale); color:var(--accent); }
+
+  @media (max-width:768px) { .result-columns { grid-template-columns:1fr; } .detail-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-hero">
+  <div class="container">
+    <div style="margin-bottom:16px;"><a href="{% url 'translate_history' %}" style="color:rgba(255,255,255,0.4);text-decoration:none;font-size:0.88rem;">← Back to History</a></div>
+    <h1>{{ job.get_job_type_display }}</h1>
+    <p>{{ job.created_at|date:"F d, Y · H:i" }}</p>
+  </div>
+</div>
+
+<div class="detail-content">
+  <div class="container">
+
+    <div class="detail-grid">
+      <div>
+        <h2 style="font-size:1.1rem;color:var(--ink);margin-bottom:8px;">Job Details</h2>
+        <div class="meta-row">
+          <span class="chip chip-accent">{{ job.target_lang_name }}</span>
+          <span class="chip chip-teal">{{ job.type_icon }} {{ job.get_job_type_display }}</span>
+          {% if job.source_lang != 'auto' %}<span class="chip chip-ink">From {{ job.source_lang_name }}</span>{% endif %}
+        </div>
+        {% if job.video_url %}
+        <div style="margin-top:12px;font-size:0.88rem;color:var(--text-mute);">URL: <a href="{{ job.video_url }}" target="_blank" style="color:var(--accent);">{{ job.video_url|truncatechars:60 }}</a></div>
+        {% endif %}
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="copy-btn" onclick="copyEl('job-orig','btn-copy-orig');" id="btn-copy-orig">Copy Original</button>
+        <button class="copy-btn" onclick="copyEl('job-trans','btn-copy-trans');" id="btn-copy-trans">Copy Translation</button>
+        <div class="dl-dropdown">
+          <button class="btn btn-accent" style="padding:8px 18px;font-size:0.88rem;gap:6px;" onclick="toggleDl(event)">⬇ Download <span style="font-size:0.7rem;opacity:0.75;">▾</span></button>
+          <div class="dl-menu" id="dl-menu">
+            <button class="dl-item" onclick="dlAs('txt','translation')">📄 Translation only (.txt)</button>
+            <button class="dl-item" onclick="dlAs('txt','both')">📋 Original + Translation (.txt)</button>
+            <button class="dl-item" onclick="dlAs('srt','translation')">🎬 Translation (.srt)</button>
+            <button class="dl-item" onclick="dlAs('srt','both')">🎬 Original + Translation (.srt)</button>
+          </div>
+        </div>
+        <a href="{% url 'translate_home' %}" class="btn btn-ghost" style="padding:8px 18px;font-size:0.88rem;">New Translation</a>
+      </div>
+    </div>
+
+    {% if job.transcript %}
+    <div class="transcript-section">
+      <div class="ts-label">📝 Extracted Script</div>
+      <div style="font-size:0.92rem;line-height:1.8;white-space:pre-wrap;">{{ job.transcript }}</div>
+    </div>
+    {% endif %}
+
+    <div class="result-columns">
+      <div>
+        <div class="rc-label src">Original</div>
+        <div class="rc-text orig" id="job-orig">{{ job.original_text|default:job.transcript|default:"—" }}</div>
+      </div>
+      <div>
+        <div class="rc-label tgt">Translation</div>
+        <div class="rc-text trans" id="job-trans">{{ job.translated_text|default:"—" }}</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function copyEl(id, btnId) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function toggleDl(e) {
+  e.stopPropagation();
+  document.getElementById('dl-menu').classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  const m = document.getElementById('dl-menu');
+  if (m) m.classList.remove('open');
+});
+
+function dlAs(format, mode) {
+  document.getElementById('dl-menu').classList.remove('open');
+  const translated = (document.getElementById('job-trans') || {}).textContent || '';
+  const original   = (document.getElementById('job-orig')  || {}).textContent || '';
+  const ts = new Date().toISOString().slice(0,19).replace('T','_').replace(/:/g,'-');
+
+  let content = '';
+  if (format === 'txt') {
+    content = mode === 'translation'
+      ? translated.trim()
+      : `=== ORIGINAL ===\n\n${original.trim()}\n\n=== TRANSLATION ===\n\n${translated.trim()}`;
+    triggerDownload(content, `echovox_${ts}.txt`, 'text/plain');
+  } else {
+    const blocks = mode === 'translation' ? [translated.trim()] : [original.trim(), translated.trim()];
+    let idx = 1, out = '';
+    blocks.forEach((block, bi) => {
+      const label = bi === 0 && blocks.length > 1 ? '[ORIGINAL] ' : bi === 1 ? '[TRANSLATION] ' : '';
+      block.split('\n').filter(l => l.trim()).forEach(line => {
+        const s = idx*3-3, e = idx*3;
+        out += `${idx}\n${fmt(s)} --> ${fmt(e)}\n${label}${line}\n\n`;
+        idx++;
+      });
+    });
+    triggerDownload(out.trim(), `echovox_${ts}.srt`, 'text/plain');
+  }
+}
+
+function fmt(sec) {
+  const h=Math.floor(sec/3600).toString().padStart(2,'0');
+  const m=Math.floor((sec%3600)/60).toString().padStart(2,'0');
+  const s=Math.floor(sec%60).toString().padStart(2,'0');
+  return `${h}:${m}:${s},000`;
+}
+
+function triggerDownload(content, filename, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type: mime}));
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+{% endblock %}

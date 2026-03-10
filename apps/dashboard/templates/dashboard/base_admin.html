@@ -1,0 +1,246 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Admin{% endblock %} — Echovox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --ink:#0a0a0f; --ink-soft:#1a1a2e; --surface:#f5f4f0; --surface-2:#eeede8; --surface-3:#e5e4de;
+      --accent:#ff6b35; --accent-pale:#fff0eb; --teal:#00c9a7; --teal-pale:#e0faf5;
+      --red:#e74c3c; --red-pale:#fef2f0; --gold:#f5c518; --gold-pale:#fffbe6;
+      --text:#1a1a2e; --text-mute:#5a5a7a; --text-faint:#9a9ab0;
+      --sidebar-w:240px; --radius:12px; --shadow:0 4px 24px rgba(10,10,15,0.08);
+      --shadow-lg:0 16px 48px rgba(10,10,15,0.14); --transition:0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--text);display:flex;min-height:100vh;}
+
+    /* SIDEBAR */
+    .sidebar{width:var(--sidebar-w);background:var(--ink);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+    .sb-brand{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.07);}
+    .sb-logo{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:#fff;text-decoration:none;}
+    .sb-logo span{color:var(--accent);}
+    .sb-badge{display:inline-block;background:rgba(255,107,53,0.2);color:var(--accent);font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:4px;margin-top:4px;letter-spacing:0.06em;text-transform:uppercase;}
+    .sb-nav{flex:1;padding:16px 12px;}
+    .sb-section{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.25);padding:12px 10px 6px;}
+    .sb-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:rgba(255,255,255,0.55);text-decoration:none;font-size:0.88rem;font-weight:500;transition:var(--transition);margin-bottom:2px;}
+    .sb-link:hover{background:rgba(255,255,255,0.07);color:#fff;}
+    .sb-link.active{background:var(--accent);color:#fff;}
+    .sb-link .icon{width:18px;text-align:center;font-style:normal;font-size:1rem;}
+    .sb-count{margin-left:auto;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:100px;}
+    .sb-link.active .sb-count{background:rgba(255,255,255,0.25);color:#fff;}
+    .sb-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,0.07);}
+    .sb-user{display:flex;align-items:center;gap:10px;}
+    .sb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--teal));display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:800;color:#fff;flex-shrink:0;}
+    .sb-username{font-size:0.85rem;font-weight:600;color:#fff;}
+    .sb-role{font-size:0.72rem;color:rgba(255,255,255,0.4);}
+
+    /* MAIN */
+    .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-width:0;}
+    .topbar{background:#fff;border-bottom:1px solid var(--surface-3);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 1px 0 var(--surface-3);}
+    .topbar-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--ink);}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .content{padding:32px;flex:1;}
+
+    /* CARDS */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+    .stat-card{background:#fff;border-radius:var(--radius);padding:20px 24px;border:1px solid var(--surface-3);position:relative;overflow:hidden;transition:var(--transition);}
+    .stat-card:hover{box-shadow:var(--shadow);}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .stat-accent::before{background:var(--accent);}
+    .stat-teal::before{background:var(--teal);}
+    .stat-gold::before{background:var(--gold);}
+    .stat-ink::before{background:var(--ink);}
+    .stat-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--ink);line-height:1;}
+    .stat-label{font-size:0.82rem;color:var(--text-faint);margin-top:6px;}
+    .stat-sub{font-size:0.78rem;margin-top:8px;display:flex;align-items:center;gap:4px;}
+    .stat-up{color:#00856e;} .stat-down{color:var(--red);}
+
+    /* TABLE */
+    .table-card{background:#fff;border-radius:var(--radius);border:1px solid var(--surface-3);overflow:hidden;box-shadow:var(--shadow);}
+    .table-header{padding:16px 24px;border-bottom:1px solid var(--surface-2);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .table-title{font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;}
+    table{width:100%;border-collapse:collapse;}
+    th{text-align:left;padding:11px 16px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-faint);background:var(--surface);border-bottom:1px solid var(--surface-3);}
+    td{padding:12px 16px;border-bottom:1px solid var(--surface-2);font-size:0.88rem;vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:var(--surface);}
+    .td-user{display:flex;align-items:center;gap:10px;}
+    .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--ink),var(--ink-soft));display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:#fff;flex-shrink:0;}
+    .av-accent{background:linear-gradient(135deg,var(--accent),#ff9666);}
+
+    /* BADGES */
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:0.73rem;font-weight:700;}
+    .badge-green{background:#e8faf4;color:#1a7a55;}
+    .badge-red{background:var(--red-pale);color:var(--red);}
+    .badge-orange{background:var(--accent-pale);color:var(--accent);}
+    .badge-teal{background:var(--teal-pale);color:#00856e;}
+    .badge-gold{background:var(--gold-pale);color:#8b7000;}
+    .badge-gray{background:var(--surface-2);color:var(--text-mute);}
+    .badge-ink{background:rgba(10,10,15,0.08);color:var(--ink);}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.84rem;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;text-decoration:none;transition:var(--transition);white-space:nowrap;}
+    .btn-sm{padding:5px 12px;font-size:0.78rem;}
+    .btn-accent{background:var(--accent);color:#fff;} .btn-accent:hover{filter:brightness(1.08);}
+    .btn-ghost{background:transparent;color:var(--text-mute);border:1.5px solid var(--surface-3);} .btn-ghost:hover{border-color:var(--text-mute);color:var(--ink);}
+    .btn-red{background:var(--red-pale);color:var(--red);border:1px solid rgba(231,76,60,0.2);} .btn-red:hover{background:var(--red);color:#fff;}
+    .btn-teal{background:var(--teal-pale);color:#00856e;border:1px solid rgba(0,201,167,0.2);} .btn-teal:hover{background:var(--teal);color:#fff;}
+    .btn-gold{background:var(--gold-pale);color:#8b7000;border:1px solid rgba(245,197,24,0.2);} .btn-gold:hover{background:var(--gold);color:var(--ink);}
+
+    /* SEARCH / FILTER BAR */
+    .filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;}
+    .filter-input{padding:9px 14px;border:1.5px solid var(--surface-3);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--text);outline:none;transition:var(--transition);background:#fff;min-width:220px;}
+    .filter-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,107,53,0.1);}
+    .filter-select{padding:9px 14px;border:1.5px solid var(--surface-3);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--text);outline:none;background:#fff;cursor:pointer;transition:var(--transition);}
+    .filter-select:focus{border-color:var(--accent);}
+
+    /* CONFIRM MODAL */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,10,15,0.5);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+    .modal-overlay.open{display:flex;}
+    .modal{background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:var(--shadow-lg);animation:modalIn 0.2s ease;}
+    @keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+    .modal-icon{font-size:2.5rem;margin-bottom:16px;}
+    .modal-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:8px;}
+    .modal-body{color:var(--text-mute);font-size:0.9rem;line-height:1.6;margin-bottom:24px;}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+
+    /* MESSAGES */
+    .messages-stack{position:fixed;top:16px;right:16px;z-index:2000;display:flex;flex-direction:column;gap:8px;max-width:360px;}
+    .msg{padding:12px 16px;border-radius:10px;font-size:0.87rem;font-weight:500;display:flex;align-items:center;gap:10px;animation:slideIn 0.3s ease;box-shadow:var(--shadow);}
+    .msg-success{background:#e8faf4;color:#1a7a55;border-left:4px solid var(--teal);}
+    .msg-error{background:var(--red-pale);color:var(--red);border-left:4px solid var(--red);}
+    .msg-info{background:#eef5ff;color:#1a4fa8;border-left:4px solid #3b82f6;}
+    @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+    /* MISC */
+    .section-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+    .empty{text-align:center;padding:48px;color:var(--text-faint);}
+    .empty-icon{font-size:2.5rem;margin-bottom:12px;}
+    .truncate{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .page-header{margin-bottom:24px;}
+    .page-header h1{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--ink);}
+    .page-header p{color:var(--text-mute);font-size:0.9rem;margin-top:4px;}
+
+    @media(max-width:1100px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;}.section-grid{grid-template-columns:1fr;}}
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <a href="{% url 'admin_overview' %}" class="sb-logo">Echo<span>vox</span></a>
+    <div class="sb-badge">Admin Panel</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Main</div>
+    <a href="{% url 'admin_overview' %}" class="sb-link {% if request.resolver_match.url_name == 'admin_overview' %}active{% endif %}">
+      <i class="icon">📊</i> Overview
+    </a>
+
+    <div class="sb-section">Manage</div>
+    <a href="{% url 'admin_users' %}" class="sb-link {% if 'admin_user' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="icon">👥</i> Users
+    </a>
+    <a href="{% url 'admin_posts' %}" class="sb-link {% if 'admin_post' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="icon">📋</i> Posts
+    </a>
+    <a href="{% url 'admin_replies' %}" class="sb-link {% if 'admin_repl' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="icon">💬</i> Replies
+    </a>
+    <a href="{% url 'admin_jobs' %}" class="sb-link {% if 'admin_job' in request.resolver_match.url_name %}active{% endif %}">
+      <i class="icon">⚡</i> AI Jobs
+    </a>
+
+    <div class="sb-section">Site</div>
+    <a href="{% url 'landing' %}" class="sb-link" target="_blank">
+      <i class="icon">🌐</i> View Site
+    </a>
+    <a href="/admin/" class="sb-link" target="_blank">
+      <i class="icon">🔧</i> Django Admin
+    </a>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="sb-av">{{ request.user.username|first|upper }}</div>
+      <div>
+        <div class="sb-username">{{ request.user.username }}</div>
+        <div class="sb-role">{% if request.user.is_superuser %}Superuser{% else %}Staff{% endif %}</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+    <div class="topbar-right">
+      <a href="{% url 'landing' %}" class="btn btn-ghost btn-sm">← Back to site</a>
+      <a href="{% url 'logout' %}" class="btn btn-ghost btn-sm">Sign out</a>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="messages-stack">
+    {% for msg in messages %}
+    <div class="msg msg-{% if msg.tags == 'error' %}error{% elif msg.tags == 'success' %}success{% else %}info{% endif %}">
+      {% if msg.tags == 'success' %}✓{% elif msg.tags == 'error' %}✕{% else %}ℹ{% endif %}
+      {{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+  <script>setTimeout(()=>{document.querySelectorAll('.msg').forEach(el=>el.style.opacity='0')},4000);</script>
+  {% endif %}
+
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-icon" id="modal-icon">⚠️</div>
+    <div class="modal-title" id="modal-title">Are you sure?</div>
+    <div class="modal-body" id="modal-body">This action cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <form id="modal-form" method="post" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="next" id="modal-next"/>
+        <button type="submit" class="btn btn-red" id="modal-confirm-btn">Confirm</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmAction(action, url, title, body, btnText, btnClass, nextUrl) {
+  document.getElementById('modal-title').textContent   = title;
+  document.getElementById('modal-body').textContent    = body;
+  document.getElementById('modal-form').action         = url;
+  document.getElementById('modal-next').value          = nextUrl || window.location.pathname + window.location.search;
+  const btn = document.getElementById('modal-confirm-btn');
+  btn.textContent  = btnText || 'Confirm';
+  btn.className    = 'btn ' + (btnClass || 'btn-red');
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+document.getElementById('confirm-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+
+{% block extra_foot %}{% endblock %}
+</body>
+</html>

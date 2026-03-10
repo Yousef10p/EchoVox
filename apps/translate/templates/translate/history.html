@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}My Translation History — Echovox{% endblock %}
+
+{% block extra_head %}
+<style>
+  .history-hero { background:var(--ink); padding:56px 0; position:relative; overflow:hidden; }
+  .history-hero::after { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(255,107,53,0.15) 0%,transparent 70%); top:-200px; right:-100px; }
+  .history-hero h1 { font-size:clamp(2rem,4vw,3rem); color:#fff; margin-bottom:8px; position:relative; z-index:1; }
+  .history-hero p  { color:rgba(255,255,255,0.5); position:relative; z-index:1; }
+
+  .history-content { padding:48px 0 80px; }
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:40px; }
+  .stat-box { background:#fff; border-radius:var(--radius); padding:24px; border:1px solid var(--surface-3); text-align:center; }
+  .stat-box .num { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; color:var(--ink); }
+  .stat-box .lbl { font-size:0.82rem; color:var(--text-faint); margin-top:4px; }
+
+  .jobs-list { display:flex; flex-direction:column; gap:16px; }
+  .job-card { background:#fff; border-radius:var(--radius); border:1px solid var(--surface-3); overflow:hidden; transition:var(--transition); text-decoration:none; color:inherit; display:block; }
+  .job-card:hover { transform:translateY(-2px); box-shadow:var(--shadow); }
+  .job-inner { display:grid; grid-template-columns:auto 1fr auto; gap:20px; align-items:center; padding:20px 24px; }
+  .job-icon { width:48px; height:48px; border-radius:12px; background:var(--accent-pale); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+  .job-icon.video { background:#f0f0ff; color:#6666cc; }
+  .job-icon.file  { background:var(--teal-pale); color:#00856e; }
+  .job-meta { }
+  .job-type { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; color:var(--ink); margin-bottom:4px; }
+  .job-preview { font-size:0.85rem; color:var(--text-mute); line-height:1.5; }
+  .job-right { text-align:right; flex-shrink:0; }
+  .job-pair { font-size:0.88rem; font-weight:600; color:var(--ink); white-space:nowrap; }
+  .job-date { font-size:0.78rem; color:var(--text-faint); margin-top:4px; }
+  .job-divider { height:3px; background:linear-gradient(90deg,var(--accent),var(--teal)); }
+
+  .empty-state { text-align:center; padding:80px 40px; background:#fff; border-radius:var(--radius); border:1px solid var(--surface-3); }
+  .empty-icon { font-size:3rem; margin-bottom:16px; }
+  .empty-title { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:700; margin-bottom:8px; }
+  .empty-desc { color:var(--text-mute); margin-bottom:24px; }
+
+  @media (max-width:768px) { .stats-row { grid-template-columns:1fr 1fr; } .job-inner { grid-template-columns:auto 1fr; } .job-right { display:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-hero">
+  <div class="container">
+    <div class="section-tag" style="color:rgba(255,255,255,0.4);">My Account</div>
+    <h1>Translation History</h1>
+    <p>All your past translations in one place.</p>
+  </div>
+</div>
+
+<div class="history-content">
+  <div class="container">
+
+    {% if jobs %}
+    <div class="stats-row">
+      <div class="stat-box"><div class="num">{{ jobs.count }}</div><div class="lbl">Total Jobs</div></div>
+      <div class="stat-box"><div class="num">{{ jobs|length }}</div><div class="lbl">Completed</div></div>
+      <div class="stat-box"><div class="num">{{ jobs.0.created_at|date:"M d" }}</div><div class="lbl">Last Translation</div></div>
+      <div class="stat-box"><div class="num">8+</div><div class="lbl">Languages Available</div></div>
+    </div>
+
+    <div class="jobs-list">
+      {% for job in jobs %}
+      <a href="{% url 'translate_job_detail' job.pk %}" class="job-card">
+        <div class="job-divider"></div>
+        <div class="job-inner">
+          <div class="job-icon {% if 'video' in job.job_type %}video{% elif job.job_type == 'file' %}file{% endif %}">
+            {{ job.type_icon }}
+          </div>
+          <div class="job-meta">
+            <div class="job-type">{{ job.get_job_type_display }}</div>
+            <div class="job-preview">{{ job.preview|default:"No preview available" }}</div>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="chip chip-accent">{{ job.target_lang_name }}</span>
+              {% if job.source_lang != 'auto' %}<span class="chip chip-ink">from {{ job.source_lang_name }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="job-right">
+            <div class="job-pair">{{ job.source_lang_name }} → {{ job.target_lang_name }}</div>
+            <div class="job-date">{{ job.created_at|date:"M d, Y · H:i" }}</div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">No translations yet</div>
+      <p class="empty-desc">Your translation history will appear here once you start translating.</p>
+      <a href="{% url 'translate_home' %}" class="btn btn-accent" style="padding:14px 32px;">Start Translating →</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'dashboard/base_admin.html' %}
+{% block title %}AI Jobs{% endblock %}
+{% block page_title %}AI Translation Jobs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>AI Translation Jobs</h1>
+  <p>All translation jobs processed by the AI engine.</p>
+</div>
+
+<form method="get" class="filter-bar">
+  <input type="text" name="q" placeholder="🔍  Search by user or content…" class="filter-input" value="{{ q }}"/>
+  <select name="type" class="filter-select" onchange="this.form.submit()">
+    <option value="">All Types</option>
+    <option value="text"         {% if jtype == 'text' %}selected{% endif %}>Text</option>
+    <option value="file"         {% if jtype == 'file' %}selected{% endif %}>File</option>
+    <option value="video_url"    {% if jtype == 'video_url' %}selected{% endif %}>Video URL</option>
+    <option value="video_upload" {% if jtype == 'video_upload' %}selected{% endif %}>Video Upload</option>
+  </select>
+  <button type="submit" class="btn btn-accent btn-sm">Search</button>
+  {% if q or jtype %}<a href="{% url 'admin_jobs' %}" class="btn btn-ghost btn-sm">Clear</a>{% endif %}
+</form>
+
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title">{{ jobs.count }} job{{ jobs.count|pluralize }}</div>
+  </div>
+  <table>
+    <thead>
+      <tr><th>User</th><th>Type</th><th>Languages</th><th>Original</th><th>Translation</th><th>Date</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr>
+        <td>
+          {% if job.user %}
+            <a href="{% url 'admin_user_detail' job.user.pk %}" style="color:var(--ink);font-weight:600;text-decoration:none;">@{{ job.user.username }}</a>
+          {% else %}
+            <span style="color:var(--text-faint);">Anonymous</span>
+          {% endif %}
+        </td>
+        <td><span class="badge badge-ink">{{ job.get_job_type_display }}</span></td>
+        <td style="color:var(--text-faint);font-size:0.84rem;white-space:nowrap;">{{ job.source_lang_name }} → {{ job.target_lang_name }}</td>
+        <td class="truncate" style="color:var(--text-mute);max-width:200px;">{{ job.preview }}</td>
+        <td class="truncate" style="color:var(--text-mute);max-width:200px;">{{ job.translated_text|truncatechars:80 }}</td>
+        <td style="color:var(--text-faint);font-size:0.82rem;white-space:nowrap;">{{ job.created_at|date:"M d, Y H:i" }}</td>
+        <td>
+          <button class="btn btn-red btn-sm"
+            onclick="confirmAction('del','{% url 'admin_job_delete' job.pk %}','Delete this job?','This translation record will be permanently deleted.','Delete','btn-red')">
+            Delete
+          </button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7"><div class="empty"><div class="empty-icon">⚡</div>No jobs found.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

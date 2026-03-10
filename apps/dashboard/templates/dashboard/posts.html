@@ -1,0 +1,116 @@
+{% extends 'dashboard/base_admin.html' %}
+{% block title %}Posts{% endblock %}
+{% block page_title %}Community Posts{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Community Posts</h1>
+  <p>Manage all community translation requests.</p>
+</div>
+
+<form method="get" class="filter-bar">
+  <input type="text" name="q" placeholder="🔍  Search posts…" class="filter-input" value="{{ q }}"/>
+  <select name="status" class="filter-select" onchange="this.form.submit()">
+    <option value="">All Status</option>
+    <option value="open"        {% if status == 'open' %}selected{% endif %}>Open</option>
+    <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>In Progress</option>
+    <option value="completed"   {% if status == 'completed' %}selected{% endif %}>Completed</option>
+  </select>
+  <select name="cat" class="filter-select" onchange="this.form.submit()">
+    <option value="">All Categories</option>
+    <option value="legal"    {% if cat == 'legal' %}selected{% endif %}>Legal</option>
+    <option value="medical"  {% if cat == 'medical' %}selected{% endif %}>Medical</option>
+    <option value="technical"{% if cat == 'technical' %}selected{% endif %}>Technical</option>
+    <option value="literary" {% if cat == 'literary' %}selected{% endif %}>Literary</option>
+    <option value="business" {% if cat == 'business' %}selected{% endif %}>Business</option>
+    <option value="academic" {% if cat == 'academic' %}selected{% endif %}>Academic</option>
+    <option value="personal" {% if cat == 'personal' %}selected{% endif %}>Personal</option>
+    <option value="other"    {% if cat == 'other' %}selected{% endif %}>Other</option>
+  </select>
+  <button type="submit" class="btn btn-accent btn-sm">Search</button>
+  {% if q or status or cat %}<a href="{% url 'admin_posts' %}" class="btn btn-ghost btn-sm">Clear</a>{% endif %}
+</form>
+
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title">{{ posts.count }} post{{ posts.count|pluralize }}</div>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Title</th><th>Author</th><th>Languages</th><th>Category</th><th>Status</th><th>Replies</th><th>Date</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      {% for post in posts %}
+      <tr>
+        <td>
+          <a href="{% url 'post_detail' post.pk %}" target="_blank" style="color:var(--ink);font-weight:600;text-decoration:none;" class="truncate" title="{{ post.title }}">
+            {{ post.title|truncatechars:50 }}
+          </a>
+        </td>
+        <td>
+          <a href="{% url 'admin_user_detail' post.user.pk %}" style="color:var(--text-mute);text-decoration:none;">@{{ post.user.username }}</a>
+        </td>
+        <td style="color:var(--text-faint);font-size:0.84rem;">{{ post.source_lang_name }} → {{ post.target_lang_name }}</td>
+        <td><span class="badge badge-ink">{{ post.get_category_display }}</span></td>
+        <td>
+          {% if post.status == 'open' %}<span class="badge badge-green">Open</span>
+          {% elif post.status == 'in_progress' %}<span class="badge badge-gold">In Progress</span>
+          {% else %}<span class="badge badge-gray">Completed</span>{% endif %}
+        </td>
+        <td style="font-weight:600;">{{ post.reply_cnt }}</td>
+        <td style="color:var(--text-faint);font-size:0.82rem;">{{ post.created_at|date:"M d, Y" }}</td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <!-- Change status -->
+            <div style="position:relative;display:inline-block;" id="status-dd-{{ post.pk }}">
+              <button class="btn btn-gold btn-sm" onclick="toggleStatusMenu({{ post.pk }})">Status ▾</button>
+              <div id="status-menu-{{ post.pk }}" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--surface-3);border-radius:10px;box-shadow:var(--shadow-lg);min-width:150px;z-index:300;overflow:hidden;">
+                <form method="post" action="{% url 'admin_post_status' post.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}"/>
+                  <input type="hidden" name="status" value="open"/>
+                  <button type="submit" style="display:block;width:100%;padding:10px 14px;background:none;border:none;text-align:left;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.84rem;border-bottom:1px solid var(--surface-2);">🟢 Open</button>
+                </form>
+                <form method="post" action="{% url 'admin_post_status' post.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}"/>
+                  <input type="hidden" name="status" value="in_progress"/>
+                  <button type="submit" style="display:block;width:100%;padding:10px 14px;background:none;border:none;text-align:left;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.84rem;border-bottom:1px solid var(--surface-2);">🟡 In Progress</button>
+                </form>
+                <form method="post" action="{% url 'admin_post_status' post.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}"/>
+                  <input type="hidden" name="status" value="completed"/>
+                  <button type="submit" style="display:block;width:100%;padding:10px 14px;background:none;border:none;text-align:left;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.84rem;">✅ Completed</button>
+                </form>
+              </div>
+            </div>
+            <button class="btn btn-red btn-sm"
+              onclick="confirmAction('del','{% url 'admin_post_delete' post.pk %}','Delete post?','\"{{ post.title|truncatechars:40|escapejs }}\" and all its replies will be permanently deleted.','Delete','btn-red')">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8"><div class="empty"><div class="empty-icon">📋</div>No posts found.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function toggleStatusMenu(pk) {
+  document.querySelectorAll('[id^="status-menu-"]').forEach(m => {
+    if (m.id !== 'status-menu-' + pk) m.style.display = 'none';
+  });
+  const menu = document.getElementById('status-menu-' + pk);
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('[id^="status-dd-"]')) {
+    document.querySelectorAll('[id^="status-menu-"]').forEach(m => m.style.display = 'none');
+  }
+});
+</script>
+{% endblock %}

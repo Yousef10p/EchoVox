@@ -1,0 +1,85 @@
+{% extends 'dashboard/base_admin.html' %}
+{% block title %}Users{% endblock %}
+{% block page_title %}Users{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Users</h1>
+  <p>Manage all registered accounts.</p>
+</div>
+
+<form method="get" class="filter-bar">
+  <input type="text" name="q" placeholder="🔍  Search users…" class="filter-input" value="{{ q }}"/>
+  <select name="role" class="filter-select" onchange="this.form.submit()">
+    <option value="">All Roles</option>
+    <option value="admin" {% if role == 'admin' %}selected{% endif %}>Admins</option>
+    <option value="user"  {% if role == 'user'  %}selected{% endif %}>Users</option>
+  </select>
+  <select name="status" class="filter-select" onchange="this.form.submit()">
+    <option value="">All Status</option>
+    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+    <option value="banned" {% if status == 'banned' %}selected{% endif %}>Banned</option>
+  </select>
+  <button type="submit" class="btn btn-accent btn-sm">Search</button>
+  {% if q or role or status %}<a href="{% url 'admin_users' %}" class="btn btn-ghost btn-sm">Clear</a>{% endif %}
+</form>
+
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title">{{ users.count }} user{{ users.count|pluralize }}</div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>User</th><th>Email</th><th>Posts</th><th>Jobs</th>
+        <th>Role</th><th>Status</th><th>Joined</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>
+          <div class="td-user">
+            <div class="av av-accent">{{ u.username|first|upper }}</div>
+            <div>
+              <div style="font-weight:600;">
+                <a href="{% url 'admin_user_detail' u.pk %}" style="color:var(--ink);text-decoration:none;">{{ u.username }}</a>
+              </div>
+              <div style="font-size:0.76rem;color:var(--text-faint);">{{ u.get_full_name }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="color:var(--text-mute);font-size:0.84rem;">{{ u.email|truncatechars:30 }}</td>
+        <td style="font-weight:600;">{{ u.post_count }}</td>
+        <td style="font-weight:600;">{{ u.job_count }}</td>
+        <td>
+          {% if u.is_superuser %}<span class="badge badge-orange">Superuser</span>
+          {% elif u.is_staff %}<span class="badge badge-teal">Staff</span>
+          {% else %}<span class="badge badge-gray">User</span>{% endif %}
+        </td>
+        <td>
+          {% if u.is_active %}<span class="badge badge-green">Active</span>
+          {% else %}<span class="badge badge-red">Banned</span>{% endif %}
+        </td>
+        <td style="color:var(--text-faint);font-size:0.82rem;">{{ u.date_joined|date:"M d, Y" }}</td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <a href="{% url 'admin_user_detail' u.pk %}" class="btn btn-ghost btn-sm">View</a>
+            {% if u != request.user %}
+              {% if u.is_active %}
+                <button class="btn btn-red btn-sm" onclick="confirmAction('ban','{% url 'admin_user_ban' u.pk %}','Ban @{{ u.username }}?','This user will be unable to log in until unbanned.','Ban User','btn-red')">Ban</button>
+              {% else %}
+                <button class="btn btn-teal btn-sm" onclick="confirmAction('unban','{% url 'admin_user_ban' u.pk %}','Unban @{{ u.username }}?','This user will be able to log in again.','Unban','btn-teal')">Unban</button>
+              {% endif %}
+              <button class="btn btn-red btn-sm" onclick="confirmAction('delete','{% url 'admin_user_delete' u.pk %}','Delete @{{ u.username }}?','This will permanently delete the user and all their content. This cannot be undone.','Delete Forever','btn-red')">Delete</button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8"><div class="empty"><div class="empty-icon">👥</div>No users found.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

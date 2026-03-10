@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.title }} — Echovox{% endblock %}
+
+{% block extra_head %}
+<style>
+  .detail-hero { background:var(--ink); padding:56px 0; position:relative; overflow:hidden; }
+  .detail-hero::before { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(255,107,53,0.12) 0%,transparent 70%); top:-200px; right:-150px; }
+  .detail-hero-inner { position:relative; z-index:1; }
+  .detail-hero h1 { font-size:clamp(1.6rem,3.5vw,2.4rem); color:#fff; margin-bottom:16px; line-height:1.25; }
+  .dh-meta { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .status-open        { background:rgba(0,201,167,0.2); color:#00c9a7; padding:5px 12px; border-radius:100px; font-size:0.78rem; font-weight:700; }
+  .status-in_progress { background:rgba(245,197,24,0.2); color:#f5c518; padding:5px 12px; border-radius:100px; font-size:0.78rem; font-weight:700; }
+  .status-completed   { background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.5); padding:5px 12px; border-radius:100px; font-size:0.78rem; font-weight:700; }
+  .dh-author { display:flex; align-items:center; gap:8px; color:rgba(255,255,255,0.5); font-size:0.88rem; }
+  .dh-av { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--teal)); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; color:#fff; }
+
+  .detail-layout { display:grid; grid-template-columns:2fr 1fr; gap:32px; padding:48px 0 80px; align-items:start; }
+
+  .section-card { background:#fff; border-radius:var(--radius); border:1px solid var(--surface-3); overflow:hidden; margin-bottom:24px; box-shadow:var(--shadow); }
+  .sc-header { padding:18px 24px; border-bottom:1px solid var(--surface-2); background:var(--surface); display:flex; align-items:center; justify-content:space-between; }
+  .sc-title { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .sc-body { padding:24px; }
+
+  .original-text { background:var(--surface); border-radius:12px; padding:20px; font-size:0.92rem; line-height:1.8; white-space:pre-wrap; word-break:break-word; border:1px solid var(--surface-3); color:var(--text); }
+
+  /* REPLIES */
+  .reply-card { padding:20px; border-radius:12px; border:1px solid var(--surface-3); margin-bottom:16px; transition:var(--transition); }
+  .reply-card.accepted { border-color:var(--teal); background:var(--teal-pale); }
+  .reply-card:hover { box-shadow:var(--shadow); }
+  .reply-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
+  .reply-user { display:flex; align-items:center; gap:10px; }
+  .reply-av { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--ink),var(--ink-mute)); display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; color:#fff; flex-shrink:0; }
+  .reply-name { font-weight:600; font-size:0.9rem; }
+  .reply-date { font-size:0.78rem; color:var(--text-faint); }
+  .reply-body { font-size:0.9rem; color:var(--text-mute); line-height:1.7; margin-bottom:12px; }
+  .reply-translation { background:#fff; border-radius:10px; padding:16px; border:1px solid var(--surface-3); font-size:0.9rem; line-height:1.7; white-space:pre-wrap; word-break:break-word; }
+  .reply-translation.accepted-trans { background:var(--teal-pale); border-color:rgba(0,201,167,0.3); }
+  .accepted-badge { display:inline-flex; align-items:center; gap:6px; background:var(--teal); color:#fff; padding:4px 12px; border-radius:100px; font-size:0.75rem; font-weight:700; }
+
+  /* REPLY FORM */
+  .reply-form-card { background:#fff; border-radius:var(--radius); border:1px solid var(--surface-3); overflow:hidden; box-shadow:var(--shadow); }
+  .rfc-header { padding:18px 24px; border-bottom:1px solid var(--surface-2); background:var(--surface); }
+  .rfc-title { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; }
+  .rfc-body { padding:24px; display:flex; flex-direction:column; gap:18px; }
+  .form-label { font-size:0.84rem; font-weight:600; color:var(--text-mute); display:block; margin-bottom:8px; }
+  .form-input { width:100%; padding:12px 14px; background:var(--surface); border:1.5px solid var(--surface-3); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.92rem; color:var(--ink); transition:var(--transition); outline:none; resize:vertical; line-height:1.6; }
+  .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,107,53,0.1); }
+  .form-input::placeholder { color:var(--text-faint); }
+  .rfc-footer { padding:18px 24px; border-top:1px solid var(--surface-2); background:var(--surface); }
+
+  /* SIDEBAR */
+  .info-sidebar { position:sticky; top:90px; }
+  .sidebar-card { background:#fff; border-radius:14px; border:1px solid var(--surface-3); padding:22px; margin-bottom:16px; }
+  .sidebar-card h4 { font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--surface-2); }
+  .info-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--surface-2); font-size:0.86rem; }
+  .info-row:last-child { border-bottom:none; }
+  .info-key { color:var(--text-faint); }
+  .info-val { font-weight:600; color:var(--ink); }
+  .lang-pair-display { display:flex; align-items:center; gap:10px; justify-content:center; padding:16px; background:var(--surface); border-radius:10px; margin-bottom:16px; }
+  .lp-lang { text-align:center; }
+  .lp-code { font-family:'Syne',sans-serif; font-size:1rem; font-weight:800; color:var(--ink); }
+  .lp-name { font-size:0.75rem; color:var(--text-faint); margin-top:2px; }
+  .lp-sep { font-size:1.2rem; color:var(--accent); }
+
+  @media (max-width:900px) { .detail-layout { grid-template-columns:1fr; padding:32px 0 60px; } .info-sidebar { position:static; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-hero">
+  <div class="container detail-hero-inner">
+    <div style="margin-bottom:18px;"><a href="{% url 'translators_browse' %}" style="color:rgba(255,255,255,0.35);text-decoration:none;font-size:0.88rem;">← Back to Community</a></div>
+    <h1>{{ post.title }}</h1>
+    <div class="dh-meta">
+      <span class="status-{{ post.status }}">{{ post.get_status_display }}</span>
+      <span class="chip chip-accent" style="background:rgba(255,107,53,0.15);color:var(--accent-soft);">{{ post.get_category_display }}</span>
+      <div class="dh-author">
+        <div class="dh-av">{{ post.user.username|first|upper }}</div>
+        <span>{{ post.user.get_full_name|default:post.user.username }}</span>
+        <span>·</span>
+        <span>{{ post.created_at|timesince }} ago</span>
+      </div>
+      <span style="color:rgba(255,255,255,0.35);font-size:0.84rem;">👁 {{ post.views }} views · 💬 {{ post.reply_count }} repl{{ post.reply_count|pluralize:"y,ies" }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="detail-layout">
+
+    <!-- MAIN COLUMN -->
+    <div>
+
+      {% if post.description %}
+      <div class="section-card">
+        <div class="sc-header"><div class="sc-title">📋 Description</div></div>
+        <div class="sc-body">
+          <p style="font-size:0.95rem;color:var(--text-mute);line-height:1.7;">{{ post.description }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if post.original_text %}
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-title">📝 Text to Translate</div>
+          <button class="copy-btn" id="copy-orig" onclick="copyEl('orig-text','copy-orig')">Copy</button>
+        </div>
+        <div class="sc-body">
+          <div class="original-text" id="orig-text">{{ post.original_text }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if post.attachment %}
+      <div class="section-card">
+        <div class="sc-header"><div class="sc-title">📎 Attached File</div></div>
+        <div class="sc-body">
+          <a href="{{ post.attachment.url }}" class="btn btn-ghost" download style="display:inline-flex;">⬇ Download File</a>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- REPLIES -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-title">💬 Replies <span style="font-weight:400;color:var(--text-faint);font-family:'DM Sans',sans-serif;font-size:0.85rem;">({{ post.reply_count }})</span></div>
+        </div>
+        <div class="sc-body">
+          {% if replies %}
+            {% for reply in replies %}
+            <div class="reply-card {% if reply.is_accepted %}accepted{% endif %}">
+              <div class="reply-header">
+                <div class="reply-user">
+                  <div class="reply-av">{{ reply.user.username|first|upper }}</div>
+                  <div>
+                    <div class="reply-name">{{ reply.user.get_full_name|default:reply.user.username }}</div>
+                    <div class="reply-date">{{ reply.created_at|timesince }} ago</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  {% if reply.is_accepted %}
+                    <span class="accepted-badge">✓ Accepted</span>
+                  {% elif post.user == user and post.status != 'completed' and reply.translation %}
+                    <a href="{% url 'accept_reply' post.pk reply.pk %}" class="btn btn-teal" style="padding:6px 14px;font-size:0.82rem;">✓ Accept</a>
+                  {% endif %}
+                </div>
+              </div>
+              {% if reply.body %}
+              <p class="reply-body">{{ reply.body }}</p>
+              {% endif %}
+              {% if reply.translation %}
+              <div class="reply-translation {% if reply.is_accepted %}accepted-trans{% endif %}">
+                {{ reply.translation }}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="text-align:center;padding:40px;color:var(--text-faint);">
+              <div style="font-size:2rem;margin-bottom:12px;">💬</div>
+              <p>No replies yet. Be the first to help!</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- REPLY FORM -->
+      {% if user.is_authenticated and post.status != 'completed' %}
+      <div class="reply-form-card">
+        <div class="rfc-header"><div class="rfc-title">✍ Post a Reply</div></div>
+        <form method="post">
+          {% csrf_token %}
+          <div class="rfc-body">
+            <div>
+              <label class="form-label">{{ reply_form.body.label }}</label>
+              {{ reply_form.body }}
+            </div>
+            <div>
+              <label class="form-label">{{ reply_form.translation.label }}</label>
+              {{ reply_form.translation }}
+            </div>
+          </div>
+          <div class="rfc-footer">
+            <button type="submit" class="btn btn-accent">Post Reply →</button>
+          </div>
+        </form>
+      </div>
+      {% elif not user.is_authenticated %}
+      <div style="text-align:center;padding:32px;background:#fff;border-radius:var(--radius);border:1px solid var(--surface-3);">
+        <p style="color:var(--text-mute);margin-bottom:16px;">Sign in to post a reply or translation.</p>
+        <a href="{% url 'login' %}" class="btn btn-accent">Sign In to Reply</a>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="info-sidebar">
+      <div class="sidebar-card">
+        <h4>Request Info</h4>
+        <div class="lang-pair-display">
+          <div class="lp-lang"><div class="lp-code">{{ post.source_lang|upper }}</div><div class="lp-name">{{ post.source_lang_name }}</div></div>
+          <div class="lp-sep">→</div>
+          <div class="lp-lang"><div class="lp-code">{{ post.target_lang|upper }}</div><div class="lp-name">{{ post.target_lang_name }}</div></div>
+        </div>
+        <div class="info-row"><span class="info-key">Category</span><span class="info-val">{{ post.get_category_display }}</span></div>
+        <div class="info-row"><span class="info-key">Status</span><span class="info-val">{{ post.get_status_display }}</span></div>
+        <div class="info-row"><span class="info-key">Replies</span><span class="info-val">{{ post.reply_count }}</span></div>
+        <div class="info-row"><span class="info-key">Posted</span><span class="info-val">{{ post.created_at|date:"M d, Y" }}</span></div>
+        {% if post.attachment %}<div class="info-row"><span class="info-key">File</span><span class="info-val chip chip-teal">📎 Attached</span></div>{% endif %}
+      </div>
+
+      <div class="sidebar-card" style="background:var(--accent-pale);border-color:rgba(255,107,53,0.2);">
+        <h4 style="color:var(--accent);">⚡ Use AI Instead</h4>
+        <p style="font-size:0.86rem;color:#8b3e1a;margin-bottom:14px;line-height:1.6;">Get an instant AI translation of this text.</p>
+        <a href="{% url 'translate_home' %}" class="btn btn-accent" style="width:100%;justify-content:center;padding:10px;">AI Translate →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .copy-btn { padding:6px 14px; border-radius:8px; border:1.5px solid var(--surface-3); background:#fff; color:var(--text-mute); cursor:pointer; font-size:0.8rem; font-family:'DM Sans',sans-serif; font-weight:600; transition:var(--transition); }
+  .copy-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .copy-btn.copied { border-color:var(--teal); color:var(--teal); background:var(--teal-pale); }
+</style>
+<script>
+function copyEl(id, btnId) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+{% endblock %}

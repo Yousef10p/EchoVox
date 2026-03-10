@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %}{{ translator.name }} — Echovox{% endblock %}
+
+{% block extra_head %}
+<style>
+  .detail-hero {
+    background: var(--ink); padding: 64px 0;
+    position: relative; overflow: hidden;
+  }
+  .detail-hero::before {
+    content: ''; position: absolute;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,107,53,0.15) 0%, transparent 60%);
+    top: -200px; right: -150px;
+  }
+  .detail-grid { display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center; position: relative; z-index: 1; }
+  .detail-avatar {
+    width: 100px; height: 100px; border-radius: 24px;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem; font-weight: 800; color: #fff;
+    font-family: 'Syne', sans-serif;
+    box-shadow: 0 8px 32px rgba(255,107,53,0.4);
+  }
+  .detail-info h1 { font-size: 2rem; color: #fff; margin-bottom: 8px; }
+  .detail-info .subtitle { color: rgba(255,255,255,0.6); font-size: 1rem; }
+  .detail-badges { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .detail-cta { text-align: right; }
+  .detail-cta .rating-big { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: #fff; }
+  .detail-cta .stars-big { color: var(--gold); font-size: 1.1rem; }
+
+  .detail-content { padding: 60px 0; }
+  .detail-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
+
+  .info-card {
+    background: #fff; border-radius: var(--radius);
+    border: 1px solid var(--surface-3); padding: 32px; margin-bottom: 24px;
+  }
+  .info-card h3 { font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--surface-2); }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .stat-item { text-align: center; padding: 20px; background: var(--surface); border-radius: 12px; }
+  .stat-item .num { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--ink); }
+  .stat-item .lbl { font-size: 0.78rem; color: var(--text-faint); margin-top: 4px; }
+  .bio-text { font-size: 0.95rem; color: var(--text-mute); line-height: 1.8; }
+
+  .sidebar-card {
+    background: #fff; border-radius: var(--radius);
+    border: 1px solid var(--surface-3); padding: 28px; margin-bottom: 20px;
+    position: sticky; top: 90px;
+  }
+  .pair-display {
+    display: flex; align-items: center; gap: 16px; justify-content: center;
+    padding: 20px; background: var(--surface); border-radius: 12px; margin-bottom: 20px;
+  }
+  .pair-lang { text-align: center; }
+  .pair-lang-code { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; }
+  .pair-lang-name { font-size: 0.78rem; color: var(--text-faint); }
+  .pair-sep { font-size: 1.5rem; color: var(--accent); }
+  .contact-btn { width: 100%; text-align: center; justify-content: center; padding: 14px; border-radius: 12px; font-size: 1rem; margin-bottom: 12px; }
+
+  @media (max-width: 900px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: auto 1fr; }
+    .detail-cta { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="detail-hero">
+  <div class="container">
+    <div style="margin-bottom: 20px;">
+      <a href="{% url 'translators_browse' %}" style="color: rgba(255,255,255,0.5); text-decoration: none; font-size: 0.88rem;">← Back to translators</a>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-avatar">{{ translator.name|first }}</div>
+      <div class="detail-info">
+        <h1>{{ translator.name }}</h1>
+        <div class="subtitle">{{ translator.title|default:"Professional Translator" }}</div>
+        <div class="detail-badges">
+          <span class="chip chip-accent">{{ translator.get_specialization_display }}</span>
+          {% if translator.is_verified %}<span class="chip chip-teal">✓ Verified Expert</span>{% endif %}
+          <span class="chip chip-ink">{{ translator.years_experience }} years experience</span>
+        </div>
+      </div>
+      <div class="detail-cta">
+        <div class="rating-big">{{ translator.rating }}</div>
+        <div class="stars-big">★★★★★</div>
+        <div style="color: rgba(255,255,255,0.5); font-size: 0.84rem;">{{ translator.reviews_count }} reviews</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="detail-content">
+  <div class="container">
+    <div class="detail-layout">
+      <div>
+        <div class="info-card">
+          <h3>📊 Stats</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="num">{{ translator.rating }}</div>
+              <div class="lbl">Rating</div>
+            </div>
+            <div class="stat-item">
+              <div class="num">{{ translator.translations_done }}</div>
+              <div class="lbl">Jobs Done</div>
+            </div>
+            <div class="stat-item">
+              <div class="num">{{ translator.years_experience }}yr</div>
+              <div class="lbl">Experience</div>
+            </div>
+          </div>
+        </div>
+
+        {% if translator.bio %}
+        <div class="info-card">
+          <h3>📝 About</h3>
+          <p class="bio-text">{{ translator.bio }}</p>
+        </div>
+        {% endif %}
+
+        <div class="info-card">
+          <h3>💬 Language Pair</h3>
+          <div class="pair-display">
+            <div class="pair-lang">
+              <div class="pair-lang-code">{{ translator.get_languages_from_display }}</div>
+              <div class="pair-lang-name">Source</div>
+            </div>
+            <div class="pair-sep">⟶</div>
+            <div class="pair-lang">
+              <div class="pair-lang-code">{{ translator.get_languages_to_display }}</div>
+              <div class="pair-lang-name">Target</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sidebar-card">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div class="stars" style="font-size: 1.2rem;">★★★★★</div>
+            <div style="font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800;">{{ translator.rating }}</div>
+            <div style="font-size: 0.84rem; color: var(--text-faint);">{{ translator.reviews_count }} reviews</div>
+          </div>
+
+          <div class="pair-display" style="margin-bottom: 20px;">
+            <div class="pair-lang">
+              <div class="pair-lang-code" style="font-size: 1rem;">{{ translator.get_languages_from_display }}</div>
+            </div>
+            <div class="pair-sep">→</div>
+            <div class="pair-lang">
+              <div class="pair-lang-code" style="font-size: 1rem;">{{ translator.get_languages_to_display }}</div>
+            </div>
+          </div>
+
+          {% if user.is_authenticated %}
+            <button class="btn btn-accent contact-btn">Contact Translator</button>
+          {% else %}
+            <a href="{% url 'login' %}" class="btn btn-accent contact-btn">Sign in to Contact</a>
+          {% endif %}
+          <a href="{% url 'translate_home' %}" class="btn btn-ghost contact-btn">Use AI Translation</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

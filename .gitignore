@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+env/
+venv/
+.env
+
+# Django
+db.sqlite3
+media/
+static/
+staticfiles/
+
+# AssemblyAI / yt-dlp Temporary Files
+*.mp3
+*.mp4
+*.wav
+*.webm
+tmp/
+
+# OS
+.DS_Store
+Thumbs.db
