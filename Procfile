@@ -1,1 +1,1 @@
-web: mkdir -p staticfiles && python manage.py collectstatic --noinput --clear && gunicorn echovox.wsgi --bind 0.0.0.0:$PORT
+web: ls -R /app/static && python manage.py collectstatic --noinput && gunicorn echovox.wsgi --bind 0.0.0.0:$PORT

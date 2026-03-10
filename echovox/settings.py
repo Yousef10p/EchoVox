@@ -10,12 +10,10 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- SECURITY ---
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-echovox-change-in-production-xyz123')
-
-# DEBUG is True locally, False on Railway
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production-123')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-# On Railway, set ALLOWED_HOSTS to "your-app.up.railway.app"
+# Railway Domain Fix
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'echovox.up.railway.app,127.0.0.1,localhost').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
@@ -25,15 +23,19 @@ CSRF_TRUSTED_ORIGINS = [
 
 # --- APPLICATION DEFINITION ---
 INSTALLED_APPS = [
-    'cloudinary_storage',       # MUST BE FIRST
+    # 1. CORE DJANGO
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles', # Ensure this is here
+    'django.contrib.staticfiles', # Keep this here
+    
+    # 2. MEDIA STORAGE (Must be BELOW staticfiles to avoid collection conflicts)
+    'cloudinary_storage',
     'cloudinary',
-    # Your Apps
+    
+    # 3. YOUR APPS
     'apps.core',
     'apps.accounts',
     'apps.translators',
@@ -43,8 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise must be right below SecurityMiddleware
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # MUST BE SECOND
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,14 +59,7 @@ ROOT_URLCONF = 'echovox.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            BASE_DIR / 'apps' / 'templates',
-            BASE_DIR / 'apps' / 'core' / 'templates',
-            BASE_DIR / 'apps' / 'accounts' / 'templates',
-            BASE_DIR / 'apps' / 'translators' / 'templates',
-            BASE_DIR / 'apps' / 'translate' / 'templates',
-            BASE_DIR / 'apps' / 'dashboard' / 'templates',
-        ],
+        'DIRS': [BASE_DIR / 'apps' / 'templates'], # Added base templates path
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media', # Added for Cloudinary
             ],
         },
     },
@@ -89,7 +84,7 @@ DATABASES = {
     )
 }
 
-# --- STATIC & MEDIA FILES ---
+# --- STATIC & MEDIA FILES (THE FIX) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -97,8 +92,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Unified Storage Configuration (Django 4.2+)
-# This ensures Admin CSS works via WhiteNoise and uploads go to Cloudinary
+# Django 4.2+ Storage Logic
 if not DEBUG:
     STORAGES = {
         "default": {
@@ -111,12 +105,8 @@ if not DEBUG:
     WHITENOISE_MANIFEST_STRICT = False
 else:
     STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
+        "default": { "BACKEND": "django.core.files.storage.FileSystemStorage" },
+        "staticfiles": { "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage" },
     }
 
 # Cloudinary Credentials
@@ -151,6 +141,6 @@ ASSEMBLY_AI_KEY = os.getenv('ASSEMBLY_AI_KEY', '')
 FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
 
-
+# --- DEBUG PRINTS (Optional for logs) ---
 print(f"DEBUG: BASE_DIR is {BASE_DIR}")
-print(f"DEBUG: Static folder path is {BASE_DIR / 'static'}")
+print(f"DEBUG: Static folder is {BASE_DIR / 'static'}")
