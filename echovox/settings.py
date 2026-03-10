@@ -15,16 +15,13 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-echovox-change-in-producti
 # DEBUG is True locally, False on Railway
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
+# On Railway, set ALLOWED_HOSTS to "your-app.up.railway.app"
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'echovox.up.railway.app,127.0.0.1,localhost').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     "https://echovox.up.railway.app",
     "https://*.127.0.0.1"
 ]
-
-
-
-# On Railway, set ALLOWED_HOSTS to "your-app.up.railway.app"
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 # --- APPLICATION DEFINITION ---
 INSTALLED_APPS = [
@@ -85,7 +82,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'echovox.wsgi.application'
 
 # --- DATABASE ---
-# Uses Postgres on Railway, SQLite locally
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -94,31 +90,42 @@ DATABASES = {
     )
 }
 
-# --- STATIC FILES (WhiteNoise) ---
+# --- STATIC & MEDIA FILES ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Don't use the .exists() check; just define the path. 
-# If the folder is missing, Django will give a clear error instead of silently failing.
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
-
-if not DEBUG:
-    # This is safe and reliable for Railway
-    STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
-    WHITENOISE_MANIFEST_STRICT = False
-
-# --- MEDIA FILES (Cloudinary) ---
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Unified Storage Configuration (Django 4.2+)
+# This ensures Admin CSS works via WhiteNoise and uploads go to Cloudinary
 if not DEBUG:
-    # Use Cloudinary in production (Railway storage is not persistent)
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.StaticFilesStorage",
+        },
+    }
+    WHITENOISE_MANIFEST_STRICT = False
 else:
-    # Use local storage for development
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+# Cloudinary Credentials
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
 
 # --- AUTHENTICATION ---
 AUTH_PASSWORD_VALIDATORS = [
