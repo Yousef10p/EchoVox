@@ -15,6 +15,14 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-echovox-change-in-producti
 # DEBUG is True locally, False on Railway
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://echovox.up.railway.app",
+    "https://*.127.0.0.1"
+]
+
+
+
 # On Railway, set ALLOWED_HOSTS to "your-app.up.railway.app"
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
