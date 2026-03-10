@@ -25,14 +25,13 @@ CSRF_TRUSTED_ORIGINS = [
 
 # --- APPLICATION DEFINITION ---
 INSTALLED_APPS = [
+    'cloudinary_storage',       # MUST BE FIRST
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # Media Storage (Must be before staticfiles)
-    'cloudinary_storage',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles', # Ensure this is here
     'cloudinary',
     # Your Apps
     'apps.core',
@@ -151,3 +150,7 @@ ASSEMBLY_AI_KEY = os.getenv('ASSEMBLY_AI_KEY', '')
 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024
+
+
+print(f"DEBUG: BASE_DIR is {BASE_DIR}")
+print(f"DEBUG: Static folder path is {BASE_DIR / 'static'}")
