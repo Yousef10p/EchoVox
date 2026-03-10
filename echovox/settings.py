@@ -94,7 +94,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Enable compression and caching for production
 if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- MEDIA FILES (Cloudinary) ---
 MEDIA_URL = '/media/'
