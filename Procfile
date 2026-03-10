@@ -1,1 +1,1 @@
-web: python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn echovox.wsgi --bind 0.0.0.0:$PORT --workers 3 --threads 2 --timeout 120 --log-level info
+web: python manage.py migrate --noinput && python manage.py collectstatic --noinput --clear && gunicorn echovox.wsgi --bind 0.0.0.0:$PORT
