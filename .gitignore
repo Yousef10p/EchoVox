@@ -9,7 +9,6 @@ venv/
 # Django
 db.sqlite3
 media/
-static/
 staticfiles/
 
 # AssemblyAI / yt-dlp Temporary Files
