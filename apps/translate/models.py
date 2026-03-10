@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from cloudinary_storage.storage import VideoMediaCloudinaryStorage # <--- Add this import
 TRANSLATION_TYPES = [
     ('text', 'Text Translation'),
     ('file', 'File Translation'),
@@ -26,7 +26,12 @@ class TranslationJob(models.Model):
     transcript = models.TextField(blank=True)
     translated_text = models.TextField(blank=True)
     video_url = models.URLField(blank=True)
-    uploaded_file = models.FileField(upload_to='uploads/', blank=True, null=True)
+    uploaded_file = models.FileField(
+        upload_to='uploads/', 
+        blank=True, 
+        null=True,
+        storage=VideoMediaCloudinaryStorage() # <--- Add this storage class
+    )
     status = models.CharField(max_length=20, default='completed')
     error_message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
