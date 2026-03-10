@@ -96,15 +96,17 @@ DATABASES = {
 
 # --- STATIC FILES (WhiteNoise) ---
 STATIC_URL = '/static/'
-_STATIC_DIR = BASE_DIR / 'static'
-STATICFILES_DIRS = [_STATIC_DIR] if _STATIC_DIR.exists() else []
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Enable compression and caching for production
+# Don't use the .exists() check; just define the path. 
+# If the folder is missing, Django will give a clear error instead of silently failing.
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
 if not DEBUG:
-    # Use the base storage to avoid compression-related FileNotFoundError crashes
+    # This is safe and reliable for Railway
     STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
-    # Extra safety: tell WhiteNoise not to panic if a file is missing
     WHITENOISE_MANIFEST_STRICT = False
 
 # --- MEDIA FILES (Cloudinary) ---
